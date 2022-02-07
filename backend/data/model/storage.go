@@ -19,5 +19,5 @@ type PutReq struct {
 }
 
 type PutResp struct {
-	Error error `json:"code"`
+	Error error `json:"codes"`
 }

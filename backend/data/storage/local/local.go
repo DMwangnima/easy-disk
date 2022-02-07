@@ -10,6 +10,14 @@ type Storage struct {
 	size int
 }
 
+func NewStorage(size int, basePath string) storage.Storage {
+	om := NewObjectManager(basePath)
+	return &Storage{
+		om:   om,
+		size: size,
+	}
+}
+
 // sequential read
 func (s *Storage) Get(ctx context.Context, ids ...uint64) ([]*storage.Transfer, error) {
 	objs, err := s.om.Allocate(ids...)
@@ -21,10 +29,10 @@ func (s *Storage) Get(ctx context.Context, ids ...uint64) ([]*storage.Transfer, 
 	for i, obj := range objs {
 		// todo 后续考虑内存复用
 		buf := make([]byte, s.size)
-        num, err := obj.Read(buf)
-        if err != nil || num != s.size {
-        	// 重复处理error
-        	return nil, err
+		num, err := obj.Read(buf)
+		if err != nil || num != s.size {
+			// 重复处理error
+			return nil, err
 		}
 		res[i] = &storage.Transfer{
 			Id:   ids[i],
@@ -61,26 +69,26 @@ func (s *Storage) Put(ctx context.Context, transfers ...*storage.Transfer) error
 	return nil
 }
 
-//func (s *Storage) PutConcurrent(ctx context.Context, transfers ...*storage.Transfer) code {
-//	if len(transfers) == 0 {
-//		return nil
-//	}
-//	ids := make([]uint64, len(transfers))
-//	objs, err := s.om.Allocate(ids...)
-//	if err != nil {
-//		return err
-//	}
-//	defer s.Resume(objs...)
-//	errChan := make(chan code, 10)
-//	for i, trans := range transfers {
-//		go func() {
-//			num, err := objs[i].Write(trans.Data)
-//			// todo 统一错误
-//			if err != nil || num != len(trans.Data) {
-//				errChan <- err
-//			}
-//		}()
-//	}
-//	// todo 统一错误处理
-//	return nil
-//}
+func (s *Storage) PutConcurrent(ctx context.Context, transfers ...*storage.Transfer) error {
+	if len(transfers) == 0 {
+		return nil
+	}
+	ids := make([]uint64, len(transfers))
+	objs, err := s.om.Allocate(ids...)
+	if err != nil {
+		return err
+	}
+	defer s.om.Resume(objs...)
+	errChan := make(chan codes, 10)
+	for i, trans := range transfers {
+		go func() {
+			num, err := objs[i].Write(trans.Data)
+			// todo 统一错误
+			if err != nil || num != len(trans.Data) {
+				errChan <- err
+			}
+		}()
+	}
+	// todo 统一错误处理
+	return nil
+}

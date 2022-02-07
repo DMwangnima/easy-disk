@@ -2,6 +2,7 @@ package v1
 
 import (
     "github.com/DMwangnima/easy-disk/data/api"
+    "github.com/DMwangnima/easy-disk/data/codes"
     "github.com/DMwangnima/easy-disk/data/model"
     "github.com/DMwangnima/easy-disk/data/storage"
     "github.com/DMwangnima/easy-disk/data/util"
@@ -11,7 +12,8 @@ import (
 func Get(ctx *gin.Context) {
     var getReq model.GetReq
     if err := ctx.ShouldBindQuery(&getReq); err != nil {
-        // 统一返回错误
+        ctx.JSON(400, model.FailureWithCode(codes.WRONG_PARAM))
+        return
     }
     sli := util.GenerateContinuousSlice(getReq.Low, getReq.High)
     files, err := api.Store.Get(ctx, sli...)
@@ -38,14 +40,14 @@ func generateGetResp(transfers []*storage.Transfer) model.GetResp {
 func Put(ctx *gin.Context) {
     var putReq model.PutReq
     if err := ctx.ShouldBindJSON(&putReq); err != nil {
-        // 统一返回错误
+        ctx.JSON(400, model.FailureWithCode(codes.WRONG_PARAM))
         return
     }
     transfers := generateTransfers(&putReq)
     if err := api.Store.Put(ctx, transfers...); err != nil {
 
     }
-    ctx.JSON()
+    ctx.JSON(201, model.Success())
 }
 
 func generateTransfers(putReq *model.PutReq) []*storage.Transfer {

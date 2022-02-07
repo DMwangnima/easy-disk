@@ -13,6 +13,10 @@ type ObjectManager struct {
     basePath string
 }
 
+func NewObjectManager(basePath string) *ObjectManager {
+	return &ObjectManager{basePath: basePath}
+}
+
 func (om *ObjectManager) Allocate(ids ...uint64) ([]storage.Object, error) {
 	var err error
 	if len(ids) == 0 {
