@@ -5,9 +5,36 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	TYPE = "type"
+)
+
 var (
 	UserManager user.Manager
 )
+
+func ThirdPartyURL(ctx *gin.Context) {
+	var resUrl string
+	loginType := ctx.Param(TYPE)
+	switch loginType {
+	case "weixin":
+		resUrl = WeixinURL()
+	case "github":
+		resUrl = GithubURL()
+	default:
+		ctx.JSON(400, nil)
+		return
+	}
+	ctx.JSON(200, resUrl)
+}
+
+func WeixinURL() string {
+	return ""
+}
+
+func GithubURL() string {
+	return ""
+}
 
 func Login(ctx *gin.Context) {
 

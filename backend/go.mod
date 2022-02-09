@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/didi/gendry v1.7.0
 	github.com/gin-gonic/gin v1.7.7
+	github.com/hashicorp/golang-lru v0.5.4
 	github.com/jmoiron/sqlx v1.3.4
 )
 
