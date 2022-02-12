@@ -13,6 +13,8 @@ type Storage interface {
 
 type Object interface {
 	io.ReadWriteCloser
+	GetUsing() int
+	AddUsing(delta int)
 }
 
 type Stream interface {

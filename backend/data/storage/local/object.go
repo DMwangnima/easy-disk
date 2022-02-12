@@ -1,9 +1,9 @@
 package local
 
 import (
+	"container/list"
 	"errors"
 	"github.com/DMwangnima/easy-disk/data/storage"
-	"github.com/DMwangnima/easy-disk/data/util"
 	"io"
 	"os"
 	"path"
@@ -48,8 +48,9 @@ func (om *ObjectManager) Resume(objs ...storage.Object) {
 }
 
 type Object struct {
-	id   uint64
-	file *os.File
+	id    uint64
+	file  *os.File
+	using int
 }
 
 func NewObject(id uint64, path string) (storage.Object, error) {
@@ -77,21 +78,77 @@ func (obj *Object) Close() error {
 	return obj.file.Close()
 }
 
+func (obj *Object) GetUsing() int {
+	return obj.using
+}
+
+func (obj *Object) AddUsing(delta int) {
+	obj.using += delta
+}
+
 // todo 性能测试
 // todo 考虑系统调用read write的并发安全性
 
 type ObjectPool struct {
-	lock     sync.Mutex
-	basePath string
-	maxSize  int
-	lru      util.Lru
+	lock       sync.Mutex
+	basePath   string
+	maxSize    int
+	size       int
+	items      map[uint64]*list.Element
+	lruList    *list.List
+	evicts     map[uint64]*list.Element
+	exitChan   chan struct{}
+	signalChan chan struct{}
 }
 
 func NewObjectPool(basePath string, maxSize int) *ObjectPool {
 	return &ObjectPool{
-		basePath: basePath,
-		maxSize:  maxSize,
-		lru:      util.NewLru(maxSize),
+		basePath:   basePath,
+		maxSize:    maxSize,
+		items:      make(map[uint64]*list.Element),
+		lruList:    list.New(),
+		evicts:     make(map[uint64]*list.Element),
+		exitChan:   make(chan struct{}),
+		signalChan: make(chan struct{}),
+	}
+}
+
+func (op *ObjectPool) generatePath(id uint64) string {
+	return path.Join(op.basePath, strconv.FormatUint(id, 10))
+}
+
+func (op *ObjectPool) allocateOne(id uint64) storage.Object {
+	op.lock.Lock()
+	if item, ok := op.items[id]; ok {
+		item.Value.(*Object).AddUsing(1)
+		op.lruList.MoveToFront(item)
+		if _, ok := op.evicts[id]; ok {
+			delete(op.evicts, id)
+		}
+		op.lock.Unlock()
+		return item.Value.(*Object)
+	}
+	op.lock.Unlock()
+
+	for {
+		op.lock.Lock()
+		// 有可用空间
+		if op.size < op.maxSize {
+			// todo 检查err
+			obj, _ := NewObject(id, op.generatePath(id))
+			obj.AddUsing(1)
+			item := op.lruList.PushFront(obj)
+			op.items[id] = item
+			op.lock.Unlock()
+			return obj
+		}
+		op.lock.Unlock()
+		// 无可用空间，阻塞
+		select {
+		case <-op.signalChan:
+		case <-op.exitChan:
+			return nil
+		}
 	}
 }
 
@@ -99,27 +156,10 @@ func (op *ObjectPool) Allocate(ids ...uint64) ([]storage.Object, error) {
 	if len(ids) > op.maxSize {
 		return nil, errors.New("beyond the max size")
 	}
-	var res []storage.Object
-    op.lock.Lock()
-	defer op.lock.Unlock()
-	for _, id := range ids {
-		val, ok := op.lru.Get(id)
-		if !ok {
-			obj, err := NewObject(id, op.generatePath(id))
-			if err != nil {
-				// 打日志
-				// 释放资源
-				// 包装err
-				return res, err
-			}
-			op.lru.Add(id, obj)
-			res = append(res, obj)
-		}
-		res = append(res, val.(*Object))
+	res := make([]storage.Object, len(ids))
+	for i, id := range ids {
+        obj := op.allocateOne(id)
+		res[i] = obj
 	}
 	return res, nil
-}
-
-func (op *ObjectPool) generatePath(id uint64) string {
-return path.Join(op.basePath, strconv.FormatUint(id, 10))
 }

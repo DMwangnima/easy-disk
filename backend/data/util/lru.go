@@ -1,6 +1,8 @@
 package util
 
-import lru "github.com/hashicorp/golang-lru"
+import (
+	"github.com/hashicorp/golang-lru/simplelru"
+)
 
 // todo 考虑加入构造函数和析构函数
 // todo 去除Lru内部的锁
@@ -19,10 +21,11 @@ type Lru interface {
 }
 
 type lruImplement struct {
-	*lru.Cache
+	*simplelru.LRU
 }
 
 func NewLru(size int) Lru {
-	cache, _ := lru.New(size)
+	cache, _ := simplelru.NewLRU(size, nil)
 	return &lruImplement{cache}
 }
+
