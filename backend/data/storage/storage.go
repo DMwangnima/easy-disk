@@ -13,8 +13,15 @@ type Storage interface {
 
 type Object interface {
 	io.ReadWriteCloser
-	GetUsing() int
-	AddUsing(delta int)
+	//GetId() uint64
+	//GetUsing() int
+	//AddUsing(delta int)
+	//GetFlag() Flag
+	//SetFlag(status Flag)
+	//GetGeneration() uint64
+	//SetGeneration(generation uint64)
+	//GetSequence() uint64
+	//SetSequence(sequence uint64)
 }
 
 type Stream interface {
@@ -22,6 +29,14 @@ type Stream interface {
 	Produce(trans *Transfer)
 	Error() string
 }
+
+type Flag uint8
+
+const (
+	FREE Flag = iota
+	READ
+	WRITE
+)
 
 type Transfer struct {
 	Id   uint64 `json:"id"`

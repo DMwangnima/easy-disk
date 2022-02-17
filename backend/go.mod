@@ -7,6 +7,7 @@ require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/jmoiron/sqlx v1.3.4
+	github.com/petar/GoLLRB v0.0.0-20210522233825-ae3b015fd3e9
 )
 
 require (
