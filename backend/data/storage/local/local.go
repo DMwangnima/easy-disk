@@ -44,14 +44,14 @@ func (s *Storage) Get(ctx context.Context, ids ...uint64) ([]*storage.Transfer, 
 	return res, nil
 }
 
-func (s *Storage) GetConcurrent(ctx context.Context, ids ...uint64) ([]*storage.Transfer, error) {
-	objs, err := s.om.Allocate(ids...)
-	if err != nil {
-		return nil, err
-	}
-	defer s.om.Resume(objs...)
-
-}
+//func (s *Storage) GetConcurrent(ctx context.Context, ids ...uint64) ([]*storage.Transfer, error) {
+//	objs, err := s.om.Allocate(ids...)
+//	if err != nil {
+//		return nil, err
+//	}
+//	defer s.om.Resume(objs...)
+//
+//}
 
 // sequential write
 // 浪费了一些时间，需要进行优化
@@ -120,3 +120,14 @@ func (s *Storage) Run() {
 
 	}()
 }
+
+type StorageObjectPool struct {
+	op       *ObjectPool
+	fileSize int
+	chanSize int
+}
+
+//func (sop *StorageObjectPool) Get(ctx context.Context, ids ...uint64) ([]*storage.Transfer, error) {
+//	transChan := make(chan *storage.Transfer, sop.chanSize)
+//
+//}

@@ -38,11 +38,19 @@ type rbt struct {
 }
 
 func (tree *rbt) DeleteMin() Item {
-	return tree.internal.DeleteMin().(*adapter).item
+	item := tree.internal.DeleteMin()
+	if item == nil {
+		return nil
+	}
+	return item.(*adapter).item
 }
 
 func (tree *rbt) Delete(key Item) Item {
-	return tree.internal.Delete(&adapter{item: key}).(*adapter).item
+	item := tree.internal.Delete(&adapter{item: key})
+	if item == nil {
+		return nil
+	}
+	return item.(*adapter).item
 }
 
 func (tree *rbt) Insert(key Item) {

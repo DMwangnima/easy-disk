@@ -139,10 +139,10 @@ func (obj *Object) LessThan(than util.Item) bool {
 // todo 考虑系统调用read write的并发安全性
 
 type ObjectPool struct {
-	lock      sync.Mutex
-	basePath  string
-	maxSize   int
-	size      int
+	lock     sync.Mutex
+	basePath string
+	maxSize  int
+	size     int
 	// 关闭阈值
 	evictThreshold int
 	generation     uint64
@@ -165,10 +165,10 @@ func NewObjectPool(basePath string, maxSize int, evictRatio float64) *ObjectPool
 		sortTree:       util.NewRBTree(),
 		exitChan:       make(chan struct{}),
 		// todo 设置合理容量
-		signalChan: make(chan struct{}),
-		resumeChan: make(chan struct{}),
+		signalChan: make(chan struct{}, 10),
+		resumeChan: make(chan struct{}, 10),
 		// todo 设置回收时间
-		resumeTimer: time.NewTimer(10*time.Second),
+		resumeTimer: time.NewTimer(10 * time.Second),
 	}
 }
 
@@ -190,7 +190,7 @@ func (op *ObjectPool) allocateOne(id uint64, flag storage.Flag) (storage.Object,
 			// 检查读写冲突
 			if (flag == storage.WRITE && obj.flag != storage.FREE) || (flag == storage.READ && obj.flag == storage.WRITE) {
 				op.lock.Unlock()
-				return nil, errors.New("read write incompatible")
+				return nil, ErrObjectPoolFlag
 			}
 			obj.using += 1
 			obj.sequence = newSequence
@@ -206,8 +206,12 @@ func (op *ObjectPool) allocateOne(id uint64, flag storage.Flag) (storage.Object,
 		// 有可用空间，生成新Object
 		// todo NewObject调用会造成一定阻塞，之后考虑状态机编程方式
 		if op.size < op.maxSize {
-			// todo 检查err
-			obj, _ := NewObject(id, op.generatePath(id), newGeneration, newSequence)
+			// todo 日志输出错误，考虑是否将该错误纳入ObjectPool中
+			obj, err := NewObject(id, op.generatePath(id), newGeneration, newSequence)
+			if err != nil {
+				op.lock.Unlock()
+				return nil, err
+			}
 			obj.using += 1
 			obj.sequence = newSequence
 			obj.generation = newGeneration
@@ -225,7 +229,7 @@ func (op *ObjectPool) allocateOne(id uint64, flag storage.Flag) (storage.Object,
 		select {
 		case <-op.signalChan:
 		case <-op.exitChan:
-			return nil, errors.New("ObjectPool exits")
+			return nil, ErrObjectPoolExit
 		}
 	}
 }
@@ -236,11 +240,30 @@ func (op *ObjectPool) Allocate(flag storage.Flag, ids ...uint64) ([]storage.Obje
 	}
 	res := make([]storage.Object, len(ids))
 	for i, id := range ids {
+		// todo 日志记录err
 		// todo 检查err，并回退之前已经占用的Object
 		obj, _ := op.allocateOne(id, flag)
 		res[i] = obj
 	}
 	return res, nil
+}
+
+// AllocateStream 解决Allocate的队首阻塞问题，多个id有可能后面的id在缓存中，而第一个id阻塞了
+// todo 性能测试
+func (op *ObjectPool) AllocateStream(flag storage.Flag, ids ...uint64) storage.Stream {
+	// todo 确定一个合理的chan size
+    stream := NewStream(10)
+    for _, id := range ids {
+    	go func(oid uint64) {
+    		obj, err := op.allocateOne(oid, flag)
+    		// todo 日志记录
+    		if err != nil {
+				return
+			}
+			stream.Produce(obj)
+		}(id)
+	}
+	return stream
 }
 
 func (op *ObjectPool) resumeOne(obj storage.Object) {
@@ -277,10 +300,10 @@ func (op *ObjectPool) resumeDaemon() {
 		for {
 			select {
 			case <-op.resumeChan:
-                op.resumeTask()
-            // 定时回收
-            case <-op.resumeTimer.C:
-            	op.resumeTask()
+				op.resumeTask()
+			// 定时回收
+			case <-op.resumeTimer.C:
+				op.resumeTask()
 			case <-op.exitChan:
 				return
 			}
@@ -315,7 +338,7 @@ func (op *ObjectPool) resumeTask() {
 		obj.Close()
 		delete(op.items, obj.id)
 		op.size -= 1
-        op.lock.Unlock()
+		op.lock.Unlock()
 
 		select {
 		case op.signalChan <- struct{}{}:
@@ -324,6 +347,11 @@ func (op *ObjectPool) resumeTask() {
 		default:
 		}
 	}
+}
+
+// removeOne for testing to drawback some modifications.
+func (op *ObjectPool) removeOne(id uint64) {
+	os.Remove(op.generatePath(id))
 }
 
 func (op *ObjectPool) Exit() {

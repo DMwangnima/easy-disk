@@ -25,8 +25,8 @@ type Object interface {
 }
 
 type Stream interface {
-	Consume() (*Transfer, bool)
-	Produce(trans *Transfer)
+	Consume() (Object, bool)
+	Produce(obj Object)
 	Error() string
 }
 
