@@ -49,3 +49,26 @@ func TestObjectPool_allocateOne(t *testing.T) {
 		})
 	})
 }
+
+func TestObjectPool_resumeOne(t *testing.T) {
+	convey.Convey("Initialize ObjectPool instance", t, func() {
+		instance := NewObjectPool(basePath, maxSize, evictRatio)
+		convey.Convey("resumeOne succeed without triggering resumeTask", func() {
+			var testId uint64 = 1
+			testFlag := storage.READ
+			obj, err := instance.allocateOne(testId, testFlag)
+			convey.So(err, assertions.ShouldBeNil)
+			realObj := obj.(*Object)
+			convey.So(realObj.using, assertions.ShouldEqual, 1)
+			convey.So(realObj.generation, assertions.ShouldEqual, 0)
+			convey.So(realObj.sequence, assertions.ShouldEqual, 1)
+			instance.resumeOne(obj)
+			item, ok := instance.items[realObj.id]
+			convey.So(ok, assertions.ShouldBeTrue)
+			convey.So(item, assertions.ShouldEqual, realObj)
+			convey.So(instance.sortTree.Len(), assertions.ShouldEqual, 1)
+
+			instance.removeOne(realObj.id)
+		})
+	})
+}
