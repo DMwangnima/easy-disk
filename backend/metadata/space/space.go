@@ -1,22 +1,13 @@
 package space
 
-type Range struct {
-	Low uint64
-	High uint64
+import "io"
+
+type Manager interface {
+	Allocate(inode uint64, size uint64) (shardings []Sharding, err error)
+	Resume(inode uint64) error
 }
 
-func (rg *Range) SyncWrite(data []byte) error {
-
-}
-
-func (rg *Range) AsyncWrite() *Session {
-    return nil
-}
-
-type Session struct {
-	rg *Range
-}
-
-func (ses *Session) Transport(data []byte) {
-
+type Sharding interface {
+	io.Writer
+	Information() (offset uint64, size uint64)
 }

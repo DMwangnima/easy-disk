@@ -23,6 +23,10 @@ func (s *Stream) Produce(obj storage.Object) {
     s.channel <- obj
 }
 
+func (s *Stream) Close() {
+	close(s.channel)
+}
+
 func (s *Stream) Error() string {
 	return s.err.Error()
 }

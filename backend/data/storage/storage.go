@@ -6,14 +6,13 @@ import (
 )
 
 type Storage interface {
-	Get(ctx context.Context, ids ...uint64) ([]*Transfer, error)
-	Put(ctx context.Context, transfers ...*Transfer) error
-	PutConcurrent(ctx context.Context, transfers ...*Transfer) error
+	Get(ctx context.Context, low, high uint64) (*Transfer, error)
+	Put(ctx context.Context, transfer *Transfer) error
 }
 
 type Object interface {
 	io.ReadWriteCloser
-	//GetId() uint64
+	GetId() uint64
 	//GetUsing() int
 	//AddUsing(delta int)
 	//GetFlag() Flag
@@ -27,6 +26,7 @@ type Object interface {
 type Stream interface {
 	Consume() (Object, bool)
 	Produce(obj Object)
+	Close()
 	Error() string
 }
 
@@ -39,6 +39,7 @@ const (
 )
 
 type Transfer struct {
-	Id   uint64 `json:"id"`
+	Low  uint64 `json:"low"`
+	High uint64 `json:"high"`
 	Data []byte `json:"data"`
 }

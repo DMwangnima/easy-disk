@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	//basePath = "/Users/wangyuxuan/net-disk/data-server-test-dir"
+	basePath = "/Users/wangyuxuan/net-disk/data-server-test-dir"
 	maxSize = 10000
 	evictRatio = 0.5
 )

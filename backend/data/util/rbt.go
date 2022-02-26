@@ -10,16 +10,16 @@ type Item interface {
 }
 
 // 适配器，用于调和llrb库的接口，使得项目内的代码只对util包内的接口产生依赖
-type adapter struct {
-	item Item
+type Adapter struct {
+	Item Item
 }
 
-func (ada *adapter) Less(than llrb.Item) bool {
-	return ada.item.LessThan(than.(*adapter))
+func (ada *Adapter) Less(than llrb.Item) bool {
+	return ada.Item.LessThan(than.(*Adapter))
 }
 
-func (ada *adapter) LessThan(than Item) bool {
-	return ada.item.LessThan(than)
+func (ada *Adapter) LessThan(than Item) bool {
+	return ada.Item.LessThan(than)
 }
 
 type RBTree interface {
@@ -42,19 +42,19 @@ func (tree *rbt) DeleteMin() Item {
 	if item == nil {
 		return nil
 	}
-	return item.(*adapter).item
+	return item.(*Adapter).Item
 }
 
 func (tree *rbt) Delete(key Item) Item {
-	item := tree.internal.Delete(&adapter{item: key})
+	item := tree.internal.Delete(&Adapter{Item: key})
 	if item == nil {
 		return nil
 	}
-	return item.(*adapter).item
+	return item.(*Adapter).Item
 }
 
 func (tree *rbt) Insert(key Item) {
-	tree.internal.ReplaceOrInsert(&adapter{item: key})
+	tree.internal.ReplaceOrInsert(&Adapter{Item: key})
 }
 
 func (tree *rbt) Len() int {

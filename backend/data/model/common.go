@@ -4,7 +4,7 @@ import "github.com/DMwangnima/easy-disk/data/codes"
 
 type RespBase struct {
 	Message string `json:"message"`
-	Code    int    `json:"codes"`
+	Code    int    `json:"code"`
 }
 
 type Response struct {

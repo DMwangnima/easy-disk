@@ -2,6 +2,7 @@ package local
 
 import (
 	"errors"
+	"fmt"
 	"github.com/DMwangnima/easy-disk/data/storage"
 	"github.com/DMwangnima/easy-disk/data/util"
 	"io"
@@ -59,7 +60,7 @@ type Object struct {
 }
 
 func NewObject(id uint64, path string, generation, sequence uint64) (*Object, error) {
-	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 777)
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 666)
 	if err != nil {
 		return nil, err
 	}
@@ -85,9 +86,9 @@ func (obj *Object) Close() error {
 	return obj.file.Close()
 }
 
-//func (obj *Object) GetId() uint64 {
-//	return obj.id
-//}
+func (obj *Object) GetId() uint64 {
+	return obj.id
+}
 //
 //func (obj *Object) GetUsing() int {
 //	return obj.using
@@ -122,7 +123,7 @@ func (obj *Object) Close() error {
 //}
 
 func (obj *Object) LessThan(than util.Item) bool {
-	thanObj := than.(*Object)
+	thanObj := than.(*util.Adapter).Item.(*Object)
 	if obj.generation > thanObj.generation {
 		return false
 	}
@@ -141,6 +142,7 @@ func (obj *Object) LessThan(than util.Item) bool {
 type ObjectPool struct {
 	lock     sync.Mutex
 	basePath string
+	// 池子最大容量
 	maxSize  int
 	size     int
 	// 关闭阈值
@@ -187,6 +189,7 @@ func (op *ObjectPool) allocateOne(id uint64, flag storage.Flag) (storage.Object,
 		}
 		// 缓存命中
 		if obj, ok := op.items[id]; ok {
+			// todo: 改成排队模式，即当该object正在被读时，写请求应排队，而不是直接返回
 			// 检查读写冲突
 			if (flag == storage.WRITE && obj.flag != storage.FREE) || (flag == storage.READ && obj.flag == storage.WRITE) {
 				op.lock.Unlock()
@@ -253,16 +256,24 @@ func (op *ObjectPool) Allocate(flag storage.Flag, ids ...uint64) ([]storage.Obje
 func (op *ObjectPool) AllocateStream(flag storage.Flag, ids ...uint64) storage.Stream {
 	// todo 确定一个合理的chan size
     stream := NewStream(10)
+    var wg sync.WaitGroup
+    wg.Add(len(ids))
     for _, id := range ids {
     	go func(oid uint64) {
+    		defer wg.Done()
     		obj, err := op.allocateOne(oid, flag)
     		// todo 日志记录
     		if err != nil {
+    			fmt.Println(err)
 				return
 			}
 			stream.Produce(obj)
 		}(id)
 	}
+	go func() {
+		wg.Wait()
+		stream.Close()
+	}()
 	return stream
 }
 
