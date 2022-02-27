@@ -2,6 +2,7 @@ package local
 
 import (
 	"context"
+	"errors"
 	"github.com/DMwangnima/easy-disk/data/storage"
 	"github.com/DMwangnima/easy-disk/data/util"
 	"os"
@@ -17,13 +18,21 @@ type Chunk struct {
 	mmap util.MMap
 }
 
-// todo: 考虑调用mmap后是否立刻关闭fd
 func NewChunk(chunkId uint64, basePath string, chunkSize uint64) (*Chunk, error) {
 	newPath := path.Join(basePath, strconv.FormatUint(chunkId, 10))
 	file, err := os.OpenFile(newPath, os.O_CREATE|os.O_RDWR, 0666)
 	// todo 包装错误
 	if err != nil {
 		return nil, err
+	}
+	defer file.Close()
+	info, err := file.Stat()
+	if err != nil {
+		return nil, err
+	}
+	// 该文件可能是已经创建好的，所以需要检查原有长度是否和chunkSize相同
+	if info.Size() != 0 && uint64(info.Size()) != chunkSize {
+		return nil, errors.New("size incompatible")
 	}
 	// 每次都要将该文件设置成entrySize大小，因为mmap并不能帮助扩大文件
 	if err = file.Truncate(int64(chunkSize)); err != nil {
@@ -48,10 +57,10 @@ func (chunk *Chunk) Read(buf []byte, offset, size uint64) {
 	chunk.mu.Unlock()
 }
 
-// todo 考虑是否需要sync强制刷盘
 func (chunk *Chunk) Write(buf []byte, offset, size uint64) {
 	chunk.mu.Lock()
 	copy(chunk.mmap[offset:offset+size], buf)
+	chunk.mmap.Flush()
 	chunk.mu.Unlock()
 }
 
@@ -166,6 +175,6 @@ func (sc *StorageChunk) divideRange(buf []byte, low, high uint64, fn chunkFunc) 
 		endOffset += sc.blockPerChunk
 	}
 	endOffset = high
-	res[len(res)-1] = fn(buf[startOffset*sc.blockSize:(endOffset+1)*sc.blockSize], startOffset, endOffset, highChunkIdx)
+	res[len(res)-1] = fn(buf[(startOffset-low)*sc.blockSize:(endOffset+1-low)*sc.blockSize], startOffset, endOffset, highChunkIdx)
 	return res
 }
