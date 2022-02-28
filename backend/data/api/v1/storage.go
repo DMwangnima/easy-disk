@@ -5,7 +5,6 @@ import (
     "github.com/DMwangnima/easy-disk/data/codes"
     "github.com/DMwangnima/easy-disk/data/model"
     "github.com/DMwangnima/easy-disk/data/storage"
-    "github.com/DMwangnima/easy-disk/data/util"
     "github.com/gin-gonic/gin"
 )
 
@@ -15,26 +14,18 @@ func Get(ctx *gin.Context) {
         ctx.JSON(400, model.FailureWithCode(codes.WRONG_PARAM))
         return
     }
-    sli := util.GenerateContinuousSlice(getReq.Low, getReq.High)
-    files, err := api.Store.Get(ctx, sli...)
+    file, err := api.Store.Get(ctx, getReq.Low, getReq.High)
     if err != nil {
-        // 统一返回错误并打日志
+        ctx.JSON(500, model.FailureWithCode(codes.STORAGE))
+        return
     }
-    resp := generateGetResp(files)
-    ctx.JSON(200, model.SuccessWithBody(resp))
-}
-
-func generateGetResp(transfers []*storage.Transfer) model.GetResp {
-    files := make([]model.File, len(transfers))
-    for i := 0; i < len(transfers); i++ {
-        files[i] = model.File{
-            Id:   transfers[i].Id,
-            Data: transfers[i].Data,
-        }
-    }
-    return model.GetResp{
-        Files:    files,
-    }
+    ctx.JSON(200, model.SuccessWithBody(model.GetResp{
+        File: model.File{
+            Low:  file.Low,
+            High: file.High,
+            Data: file.Data,
+        },
+    }))
 }
 
 func Put(ctx *gin.Context) {
@@ -43,20 +34,17 @@ func Put(ctx *gin.Context) {
         ctx.JSON(400, model.FailureWithCode(codes.WRONG_PARAM))
         return
     }
-    transfers := generateTransfers(&putReq)
-    if err := api.Store.Put(ctx, transfers...); err != nil {
-
+    if len(putReq.File.Data) <= 0 {
+        ctx.JSON(400, model.FailureWithCode(codes.WRONG_PARAM))
+        return
+    }
+    if err := api.Store.Put(ctx, &storage.Transfer{
+        Low:  putReq.File.Low,
+        High: putReq.File.High,
+        Data: putReq.File.Data,
+    }); err != nil {
+        // todo: 统一返回错误
+        return
     }
     ctx.JSON(201, model.Success())
-}
-
-func generateTransfers(putReq *model.PutReq) []*storage.Transfer {
-    res := make([]*storage.Transfer, len(putReq.Files))
-    for i, file := range putReq.Files {
-        res[i] = &storage.Transfer{
-            Id:   file.Id,
-            Data: file.Data,
-        }
-    }
-    return res
 }

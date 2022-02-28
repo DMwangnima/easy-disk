@@ -4,12 +4,14 @@ const (
 	OK = iota + 10000
 	DEFAULT
 	WRONG_PARAM
+	STORAGE
 
 )
 
 var CodeMap = map[int]string{
 	OK: "ok",
 	WRONG_PARAM: "wrong param",
+	STORAGE: "storage",
 	DEFAULT: "default message",
 }
 

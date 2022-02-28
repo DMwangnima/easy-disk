@@ -6,16 +6,17 @@ type GetReq struct {
 }
 
 type File struct {
-	Id   uint64 `json:"id"`
+	Low  uint64 `json:"low"`
+	High uint64 `json:"high"`
 	Data []byte `json:"data"`
 }
 
 type GetResp struct {
-	Files []File `json:"files"`
+	File File `json:"file"`
 }
 
 type PutReq struct {
-	Files []File `json:"files"`
+	File File `json:"file"`
 }
 
 type PutResp struct {

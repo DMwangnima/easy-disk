@@ -16,6 +16,7 @@ const (
 	TestMaxNum = 32768
     ChunkPath = "/Users/wangyuxuan/net-disk/data-server-test-dir/chunk"
     PoolPath = "/Users/wangyuxuan/net-disk/data-server-test-dir/pool"
+    RosePath = "/Users/wangyuxuan/net-disk/data-server-test-dir/rose"
 )
 
 type Range struct {
@@ -71,8 +72,9 @@ func (suite *Suite) ProducePutReq(num, size int) (Range, []byte) {
 }
 
 var (
-	sop = NewStorageObjectPool(PoolPath, TestMaxNum, 10000, TestFileSize, 0.5)
+	//sop = NewStorageObjectPool(PoolPath, TestMaxNum, 10000, TestFileSize, 0.5)
 	sc = NewStorageChunk(ChunkPath, TestFileSize, 1024*1024, TestMaxNum)
+	sr = NewStorageRose(RosePath, TestMaxNum, TestFileSize)
 	suite = NewSuite(TestMaxNum, TestFileSize)
 )
 
@@ -85,7 +87,7 @@ func BenchmarkStorageChunk_Put(b *testing.B) {
 	for blockNum := 1; blockNum <= TestMaxBlockNum; blockNum *= 2 {
 		b.Run(fmt.Sprintf("sequential%d", blockNum), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				req, buf := suite.ProducePutReq(i, 1)
+				req, buf := suite.ProducePutReq(i, blockNum)
 				if err := sc.Put(ctx, &storage.Transfer{
 					Low:  req.low,
 					High: req.high,
@@ -97,7 +99,7 @@ func BenchmarkStorageChunk_Put(b *testing.B) {
 		})
 		b.Run(fmt.Sprintf("random%d", blockNum), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				req, buf := suite.ProducePutReq(rand.Int(), 1)
+				req, buf := suite.ProducePutReq(rand.Int(), blockNum)
 				if err := sc.Put(ctx, &storage.Transfer{
 					Low:  req.low,
 					High: req.high,
@@ -116,6 +118,96 @@ func BenchmarkStorageChunk_ConcurrentPut(b *testing.B) {
 		for pb.Next() {
 			req, buf := suite.ProducePutReq(rand.Int(), 1)
 			if err := sc.Put(ctx, &storage.Transfer{
+				Low:  req.low,
+				High: req.high,
+				Data: buf,
+			}); err != nil {
+				b.Log(err)
+			}
+		}
+	})
+}
+
+func BenchmarkStorageRose_Put(b *testing.B) {
+	ctx := context.Background()
+	for blockNum := 1; blockNum <= TestMaxBlockNum; blockNum *= 2 {
+		b.Run(fmt.Sprintf("sequential%d", blockNum), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				req, buf := suite.ProducePutReq(i, blockNum)
+				if err := sc.Put(ctx, &storage.Transfer{
+					Low:  req.low,
+					High: req.high,
+					Data: buf,
+				}); err != nil {
+					b.Log(err)
+				}
+			}
+		})
+		b.Run(fmt.Sprintf("random%d", blockNum), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				req, buf := suite.ProducePutReq(rand.Int(), blockNum)
+				if err := sc.Put(ctx, &storage.Transfer{
+					Low:  req.low,
+					High: req.high,
+					Data: buf,
+				}); err != nil {
+					b.Log(err)
+				}
+			}
+		})
+	}
+}
+
+func BenchmarkStorageChunk_Get(b *testing.B) {
+	ctx := context.Background()
+	for blockNum := 1; blockNum <= TestMaxBlockNum; blockNum *= 2 {
+		b.Run(fmt.Sprintf("sequential%d", blockNum), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				rang := suite.ProduceGetReq(i, blockNum)
+				if _, err := sc.Get(ctx, rang.low, rang.high); err != nil {
+					b.Log(err)
+				}
+			}
+		})
+		b.Run(fmt.Sprintf("random%d", blockNum), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				rang := suite.ProduceGetReq(rand.Int(), blockNum)
+				if _, err := sc.Get(ctx, rang.low, rang.high); err != nil {
+					b.Log(err)
+				}
+			}
+		})
+	}
+}
+
+func BenchmarkStorageRose_Get(b *testing.B) {
+	ctx := context.Background()
+	for blockNum := 1; blockNum <= TestMaxBlockNum; blockNum *= 2 {
+		b.Run(fmt.Sprintf("sequential%d", blockNum), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				rang := suite.ProduceGetReq(i, blockNum)
+				if _, err := sr.Get(ctx, rang.low, rang.high); err != nil {
+					b.Log(err)
+				}
+			}
+		})
+		b.Run(fmt.Sprintf("random%d", blockNum), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				rang := suite.ProduceGetReq(rand.Int(), blockNum)
+				if _, err := sr.Get(ctx, rang.low, rang.high); err != nil {
+					b.Log(err)
+				}
+			}
+		})
+	}
+}
+
+func BenchmarkStorageRose_ConcurrentPut(b *testing.B) {
+	ctx := context.Background()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			req, buf := suite.ProducePutReq(rand.Int(), 1)
+			if err := sr.Put(ctx, &storage.Transfer{
 				Low:  req.low,
 				High: req.high,
 				Data: buf,

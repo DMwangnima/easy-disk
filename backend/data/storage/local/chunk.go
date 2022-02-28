@@ -54,7 +54,7 @@ func NewChunk(chunkId uint64, basePath string, chunkSize uint64) (*Chunk, error)
 func (chunk *Chunk) Read(buf []byte, offset, size uint64) {
 	chunk.mu.RLock()
 	copy(buf, chunk.mmap[offset:offset+size])
-	chunk.mu.Unlock()
+	chunk.mu.RUnlock()
 }
 
 func (chunk *Chunk) Write(buf []byte, offset, size uint64) {
@@ -112,6 +112,7 @@ func (sc *StorageChunk) Get(ctx context.Context, low, high uint64) (*storage.Tra
 	buf := make([]byte, (high-low+1)*sc.blockSize)
 	tasks := sc.divideRange(buf, low, high, sc.chunkReadTask)
 	var wg sync.WaitGroup
+	wg.Add(len(tasks))
 	for _, tk := range tasks {
 		go func(t task) {
 			t()
