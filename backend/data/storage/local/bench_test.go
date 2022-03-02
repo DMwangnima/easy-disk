@@ -134,7 +134,7 @@ func BenchmarkStorageRose_Put(b *testing.B) {
 		b.Run(fmt.Sprintf("sequential%d", blockNum), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				req, buf := suite.ProducePutReq(i, blockNum)
-				if err := sc.Put(ctx, &storage.Transfer{
+				if err := sr.Put(ctx, &storage.Transfer{
 					Low:  req.low,
 					High: req.high,
 					Data: buf,
@@ -146,7 +146,7 @@ func BenchmarkStorageRose_Put(b *testing.B) {
 		b.Run(fmt.Sprintf("random%d", blockNum), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				req, buf := suite.ProducePutReq(rand.Int(), blockNum)
-				if err := sc.Put(ctx, &storage.Transfer{
+				if err := sr.Put(ctx, &storage.Transfer{
 					Low:  req.low,
 					High: req.high,
 					Data: buf,

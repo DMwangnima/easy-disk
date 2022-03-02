@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/DMwangnima/easy-disk/data/storage"
 	"github.com/roseduan/rosedb"
+	rose_storage "github.com/roseduan/rosedb/storage"
 )
 
 type StorageRose struct {
@@ -15,7 +16,10 @@ type StorageRose struct {
 
 func NewStorageRose(basePath string, keyNum, valSize uint64) storage.Storage {
 	config := rosedb.DefaultConfig()
+	config.RwMethod = rose_storage.MMap
+	config.IdxMode = rosedb.KeyOnlyMemMode
 	config.DirPath = basePath
+	config.Sync = true
 	db, err := rosedb.Open(config)
 	if err != nil {
 		panic(err)
@@ -51,19 +55,10 @@ func (sr *StorageRose) Put(ctx context.Context, trans *storage.Transfer) error {
 	if trans.Low >= sr.keyNum {
 		return ErrStorageChunkBeyond
 	}
-	//var wg sync.WaitGroup
-	//wg.Add(int(trans.High-trans.Low+1))
 	for start := trans.Low; start <= trans.High; start++ {
 		if err := sr.db.Set(start, trans.Data[(start-trans.Low)*sr.valSize:(start+1-trans.Low)*sr.valSize]); err != nil {
 			fmt.Println(err)
 		}
-		//go func(key uint64) {
-		//	if err := sr.db.Set(key, trans.Data[(key-trans.Low)*sr.valSize:(key+1-trans.Low)*sr.valSize]); err != nil {
-		//		fmt.Println(err)
-		//	}
-		//	wg.Done()
-		//}(start)
 	}
-	//wg.Wait()
 	return nil
 }

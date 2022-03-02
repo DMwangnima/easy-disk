@@ -59,7 +59,7 @@ func (chunk *Chunk) Read(buf []byte, offset, size uint64) {
 
 func (chunk *Chunk) Write(buf []byte, offset, size uint64) {
 	chunk.mu.Lock()
-	copy(chunk.mmap[offset:offset+size], buf)
+    copy(chunk.mmap[offset:offset+size], buf)
 	chunk.mmap.Flush()
 	chunk.mu.Unlock()
 }
@@ -111,15 +111,9 @@ func (sc *StorageChunk) Get(ctx context.Context, low, high uint64) (*storage.Tra
 	}
 	buf := make([]byte, (high-low+1)*sc.blockSize)
 	tasks := sc.divideRange(buf, low, high, sc.chunkReadTask)
-	var wg sync.WaitGroup
-	wg.Add(len(tasks))
 	for _, tk := range tasks {
-		go func(t task) {
-			t()
-			wg.Done()
-		}(tk)
+	    tk()
 	}
-	wg.Wait()
 	return &storage.Transfer{
 		Low:  low,
 		High: high,
@@ -141,15 +135,9 @@ func (sc *StorageChunk) Put(ctx context.Context, transfer *storage.Transfer) err
 		return ErrStorageChunkBeyond
 	}
     tasks := sc.divideRange(transfer.Data, transfer.Low, transfer.High, sc.chunkWriteTask)
-	var wg sync.WaitGroup
-    wg.Add(len(tasks))
 	for _, tk := range tasks {
-		go func(t task) {
-			t()
-			wg.Done()
-		}(tk)
+	    tk()
 	}
-	wg.Wait()
 	return nil
 }
 
