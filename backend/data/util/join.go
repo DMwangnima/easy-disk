@@ -26,7 +26,7 @@ func isExist(path string) bool {
 
 func Join(basePath string, endPath string) string {
 	if ok := isExist(basePath); !ok {
-		os.MkdirAll(basePath, 666)
+		os.MkdirAll(basePath, 0666)
 	}
 	newPath := path.Join(basePath, endPath)
 	if runtime.GOOS == "windows" {

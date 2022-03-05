@@ -14,7 +14,7 @@ type StorageRose struct {
 	keyNum  uint64
 }
 
-func NewStorageRose(basePath string, keyNum, valSize uint64) storage.Storage {
+func NewStorageRose(basePath string, keyNum, valSize uint64) (storage.Storage, error) {
 	config := rosedb.DefaultConfig()
 	config.RwMethod = rose_storage.MMap
 	config.IdxMode = rosedb.KeyOnlyMemMode
@@ -22,13 +22,13 @@ func NewStorageRose(basePath string, keyNum, valSize uint64) storage.Storage {
 	config.Sync = true
 	db, err := rosedb.Open(config)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	return &StorageRose{
 		db:      db,
 		valSize: valSize,
 		keyNum:  keyNum,
-	}
+	}, nil
 }
 
 func (sr *StorageRose) Get(ctx context.Context, low, high uint64) (*storage.Transfer, error) {

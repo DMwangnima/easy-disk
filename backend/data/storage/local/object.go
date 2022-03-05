@@ -60,7 +60,7 @@ type Object struct {
 }
 
 func NewObject(id uint64, path string, generation, sequence uint64) (*Object, error) {
-	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 666)
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		return nil, err
 	}

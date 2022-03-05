@@ -14,6 +14,7 @@ var (
 	ErrObjectPoolFlag = PackageErr(objectPoolName, "read write incompatible")
 	ErrObjectPoolExit = PackageErr(objectPoolName, "ObjectPool exits")
 	ErrStorageChunkBeyond = PackageErr(StorageChunkName, "beyond the range")
+	ErrStorageChunkNotExist = PackageErr(StorageChunkName, "block not exist")
 )
 
 func PackageErr(object string, errStr string) error {
