@@ -1,0 +1,6 @@
+storage:
+  base_path: /Users/wangyuxuan/net-disk/data-server-test-dir/chunk
+server:
+  listen_ip: 0.0.0.0
+  port: 9000
+  log_path: /Users

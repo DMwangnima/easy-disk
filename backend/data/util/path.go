@@ -18,6 +18,7 @@ func isExist(path string) bool {
 		if os.IsNotExist(err) {
 			return false
 		}
+		// todo: 换成更好的方式
 		fmt.Println(err)
 		return false
 	}

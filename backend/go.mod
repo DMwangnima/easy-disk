@@ -3,6 +3,7 @@ module github.com/DMwangnima/easy-disk
 go 1.17
 
 require (
+	github.com/creasty/defaults v1.5.2
 	github.com/didi/gendry v1.7.0
 	github.com/edsrzf/mmap-go v1.1.0
 	github.com/gin-gonic/gin v1.7.7
