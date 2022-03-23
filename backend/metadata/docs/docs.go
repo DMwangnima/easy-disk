@@ -25,6 +25,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "managements"
+                ],
                 "parameters": [
                     {
                         "description": "path list of files or directories to delete.",
@@ -40,7 +43,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.RespBase"
+                            "$ref": "#/definitions/files.DeleteResp"
                         }
                     }
                 }
@@ -54,6 +57,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/octet-stream"
+                ],
+                "tags": [
+                    "managements"
                 ],
                 "parameters": [
                     {
@@ -80,10 +86,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.RespBase"
-                        }
+                        "description": ""
                     }
                 }
             }
@@ -96,6 +99,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "managements"
                 ],
                 "parameters": [
                     {
@@ -138,7 +144,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.RespBase"
+                            "$ref": "#/definitions/files.ListResp"
                         }
                     }
                 }
@@ -152,6 +158,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "managements"
                 ],
                 "parameters": [
                     {
@@ -209,6 +218,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "managements"
+                ],
                 "parameters": [
                     {
                         "type": "string",
@@ -251,6 +263,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "sessions"
+                ],
                 "parameters": [
                     {
                         "type": "string",
@@ -285,6 +300,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "sessions"
                 ],
                 "parameters": [
                     {
@@ -323,6 +341,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "sessions"
+                ],
                 "parameters": [
                     {
                         "type": "string",
@@ -357,7 +378,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.RespBase"
+                            "$ref": "#/definitions/files.StartResp"
                         }
                     }
                 }
@@ -371,6 +392,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "sessions"
                 ],
                 "parameters": [
                     {

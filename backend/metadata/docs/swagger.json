@@ -13,6 +13,9 @@
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "managements"
+                ],
                 "parameters": [
                     {
                         "description": "path list of files or directories to delete.",
@@ -28,7 +31,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.RespBase"
+                            "$ref": "#/definitions/files.DeleteResp"
                         }
                     }
                 }
@@ -42,6 +45,9 @@
                 ],
                 "produces": [
                     "application/octet-stream"
+                ],
+                "tags": [
+                    "managements"
                 ],
                 "parameters": [
                     {
@@ -68,10 +74,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.RespBase"
-                        }
+                        "description": ""
                     }
                 }
             }
@@ -84,6 +87,9 @@
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "managements"
                 ],
                 "parameters": [
                     {
@@ -126,7 +132,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.RespBase"
+                            "$ref": "#/definitions/files.ListResp"
                         }
                     }
                 }
@@ -140,6 +146,9 @@
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "managements"
                 ],
                 "parameters": [
                     {
@@ -197,6 +206,9 @@
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "managements"
+                ],
                 "parameters": [
                     {
                         "type": "string",
@@ -239,6 +251,9 @@
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "sessions"
+                ],
                 "parameters": [
                     {
                         "type": "string",
@@ -273,6 +288,9 @@
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "sessions"
                 ],
                 "parameters": [
                     {
@@ -311,6 +329,9 @@
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "sessions"
+                ],
                 "parameters": [
                     {
                         "type": "string",
@@ -345,7 +366,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.RespBase"
+                            "$ref": "#/definitions/files.StartResp"
                         }
                     }
                 }
@@ -359,6 +380,9 @@
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "sessions"
                 ],
                 "parameters": [
                     {

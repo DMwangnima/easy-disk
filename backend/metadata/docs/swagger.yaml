@@ -99,7 +99,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.RespBase'
+            $ref: '#/definitions/files.DeleteResp'
+      tags:
+      - managements
   /api/v1/files/managements/get:
     get:
       consumes:
@@ -128,9 +130,9 @@ paths:
       - application/octet-stream
       responses:
         "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.RespBase'
+          description: ""
+      tags:
+      - managements
   /api/v1/files/managements/list:
     get:
       consumes:
@@ -168,7 +170,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.RespBase'
+            $ref: '#/definitions/files.ListResp'
+      tags:
+      - managements
   /api/v1/files/managements/put:
     post:
       consumes:
@@ -207,6 +211,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/model.RespBase'
+      tags:
+      - managements
   /api/v1/files/managements/rename:
     post:
       consumes:
@@ -235,6 +241,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/model.RespBase'
+      tags:
+      - managements
   /api/v1/files/sessions/fastUpload:
     get:
       consumes:
@@ -259,6 +267,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/model.RespBase'
+      tags:
+      - sessions
   /api/v1/files/sessions/finish:
     post:
       consumes:
@@ -283,6 +293,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/model.RespBase'
+      tags:
+      - sessions
   /api/v1/files/sessions/start:
     get:
       consumes:
@@ -315,7 +327,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.RespBase'
+            $ref: '#/definitions/files.StartResp'
+      tags:
+      - sessions
   /api/v1/files/sessions/upload:
     post:
       consumes:
@@ -352,4 +366,6 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/model.RespBase'
+      tags:
+      - sessions
 swagger: "2.0"
