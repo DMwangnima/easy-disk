@@ -1,0 +1,355 @@
+definitions:
+  files.DeleteReq:
+    properties:
+      file_list:
+        items:
+          type: string
+        type: array
+    type: object
+  files.DeleteResp:
+    properties:
+      code:
+        type: integer
+      msg:
+        type: string
+      task_token:
+        type: string
+    type: object
+  files.File:
+    properties:
+      category:
+        type: integer
+      create_time:
+        type: string
+      hash:
+        type: string
+      is_dir:
+        type: integer
+      name:
+        type: string
+      parent_path:
+        type: string
+      size:
+        type: integer
+      update_time:
+        type: string
+    type: object
+  files.FinishReq:
+    properties:
+      block_list:
+        items:
+          type: string
+        type: array
+    type: object
+  files.ListResp:
+    properties:
+      code:
+        type: integer
+      files:
+        items:
+          $ref: '#/definitions/files.File'
+        type: array
+      msg:
+        type: string
+    type: object
+  files.StartResp:
+    properties:
+      block_list:
+        example:
+        - 0
+        - 1
+        - 2
+        - 3
+        items:
+          type: integer
+        type: array
+      code:
+        type: integer
+      msg:
+        type: string
+      session_token:
+        type: string
+    type: object
+  model.RespBase:
+    properties:
+      code:
+        type: integer
+      msg:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/files/managements/delete:
+    post:
+      consumes:
+      - application/json
+      description: Delete files or directories asynchronously. Then use token to poll
+        the result.
+      parameters:
+      - description: path list of files or directories to delete.
+        in: body
+        name: load
+        required: true
+        schema:
+          $ref: '#/definitions/files.DeleteReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.RespBase'
+  /api/v1/files/managements/get:
+    get:
+      consumes:
+      - application/json
+      description: 'Download file''s partial content by parent_path, name, and seq(the
+        index of the part of the file). PS: The content-type of response depends on
+        the file category.'
+      parameters:
+      - description: parent path of the wanted file.
+        in: query
+        name: parent_path
+        required: true
+        type: string
+      - description: file name.
+        in: query
+        name: name
+        required: true
+        type: string
+      - description: the index of file partial. If this file is small than 4MB, just
+          use 0.
+        in: query
+        name: seq
+        required: true
+        type: integer
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.RespBase'
+  /api/v1/files/managements/list:
+    get:
+      consumes:
+      - application/json
+      description: To list contents of a directory with specified path.
+      parameters:
+      - description: path of the wanted directory.
+        in: query
+        name: path
+        required: true
+        type: string
+      - description: 'field by which to order. Options: name, time, size.'
+        in: query
+        name: order_by
+        required: true
+        type: string
+      - description: 'sort order. Options: asc, desc.'
+        in: query
+        name: order
+        required: true
+        type: string
+      - description: number of returns. Not great than 20.
+        in: query
+        name: limit
+        required: true
+        type: integer
+      - description: index of the first returned item.
+        in: query
+        name: offset
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.RespBase'
+  /api/v1/files/managements/put:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a small file(small than 4MB) or a directory directly.
+      parameters:
+      - description: parent path of the file or directory to upload.
+        in: query
+        name: parent_path
+        required: true
+        type: string
+      - description: name of the file or directory to upload.
+        in: query
+        name: name
+        required: true
+        type: string
+      - description: indicate this object is a file or a directory. 0:file, 1:directory.
+        in: query
+        name: is_dir
+        required: true
+        type: integer
+      - description: md5 of the file. If the upload type is a directory, just miss
+          it.
+        in: query
+        name: hash
+        type: integer
+      - description: file content.
+        in: body
+        name: file
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.RespBase'
+  /api/v1/files/managements/rename:
+    post:
+      consumes:
+      - application/json
+      description: Rename a file or directory.
+      parameters:
+      - description: parent path of the file or directory to rename.
+        in: query
+        name: parent_path
+        required: true
+        type: string
+      - description: old name of the file or directory.
+        in: query
+        name: old_name
+        required: true
+        type: string
+      - description: new name of the file or directory.
+        in: query
+        name: new_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.RespBase'
+  /api/v1/files/sessions/fastUpload:
+    get:
+      consumes:
+      - application/json
+      description: Send the md5 of the whole file to check whether this file has been
+        uploaded.
+      parameters:
+      - description: token of the session.
+        in: query
+        name: session_token
+        required: true
+        type: string
+      - description: md5 of the whole file.
+        in: query
+        name: hash
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.RespBase'
+  /api/v1/files/sessions/finish:
+    post:
+      consumes:
+      - application/json
+      description: Finish the specified session and create the big file in fileSystem.
+      parameters:
+      - description: token of the session.
+        in: query
+        name: session_token
+        required: true
+        type: string
+      - description: 'block hash list belongs to the whole big file. eg: ['
+        in: body
+        name: load
+        required: true
+        schema:
+          $ref: '#/definitions/files.FinishReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.RespBase'
+  /api/v1/files/sessions/start:
+    get:
+      consumes:
+      - application/json
+      description: Start a session to upload a big file(great than 4MB).
+      parameters:
+      - description: parent path of big file to upload.
+        in: query
+        name: parent_path
+        required: true
+        type: string
+      - description: name of big file.
+        in: query
+        name: name
+        required: true
+        type: string
+      - description: additional effect of this upload action.
+        in: query
+        name: upload_type
+        required: true
+        type: integer
+      - description: number of file blocks.(every block is 4MB size)
+        in: query
+        name: seqs
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.RespBase'
+  /api/v1/files/sessions/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a 4MB(or less than) block of the big file in the specified
+        session.
+      parameters:
+      - description: token of the session.
+        in: query
+        name: session_token
+        required: true
+        type: string
+      - description: 'index of the block. eg: the first block of the big file has
+          the index 0.'
+        in: query
+        name: seq
+        required: true
+        type: integer
+      - description: md5 of this block.
+        in: query
+        name: hash
+        required: true
+        type: string
+      - description: file content
+        in: body
+        name: file
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.RespBase'
+swagger: "2.0"

@@ -1,0 +1,527 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/api/v1/files/managements/delete": {
+            "post": {
+                "description": "Delete files or directories asynchronously. Then use token to poll the result.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "description": "path list of files or directories to delete.",
+                        "name": "load",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/files.DeleteReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.RespBase"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/files/managements/get": {
+            "get": {
+                "description": "Download file's partial content by parent_path, name, and seq(the index of the part of the file). PS: The content-type of response depends on the file category.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "parent path of the wanted file.",
+                        "name": "parent_path",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "file name.",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "the index of file partial. If this file is small than 4MB, just use 0.",
+                        "name": "seq",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.RespBase"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/files/managements/list": {
+            "get": {
+                "description": "To list contents of a directory with specified path.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "path of the wanted directory.",
+                        "name": "path",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "field by which to order. Options: name, time, size.",
+                        "name": "order_by",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "sort order. Options: asc, desc.",
+                        "name": "order",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "number of returns. Not great than 20.",
+                        "name": "limit",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "index of the first returned item.",
+                        "name": "offset",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.RespBase"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/files/managements/put": {
+            "post": {
+                "description": "Upload a small file(small than 4MB) or a directory directly.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "parent path of the file or directory to upload.",
+                        "name": "parent_path",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "name of the file or directory to upload.",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "indicate this object is a file or a directory. 0:file, 1:directory.",
+                        "name": "is_dir",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "md5 of the file. If the upload type is a directory, just miss it.",
+                        "name": "hash",
+                        "in": "query"
+                    },
+                    {
+                        "description": "file content.",
+                        "name": "file",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.RespBase"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/files/managements/rename": {
+            "post": {
+                "description": "Rename a file or directory.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "parent path of the file or directory to rename.",
+                        "name": "parent_path",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "old name of the file or directory.",
+                        "name": "old_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "new name of the file or directory.",
+                        "name": "new_name",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.RespBase"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/files/sessions/fastUpload": {
+            "get": {
+                "description": "Send the md5 of the whole file to check whether this file has been uploaded.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token of the session.",
+                        "name": "session_token",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "md5 of the whole file.",
+                        "name": "hash",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.RespBase"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/files/sessions/finish": {
+            "post": {
+                "description": "Finish the specified session and create the big file in fileSystem.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token of the session.",
+                        "name": "session_token",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "block hash list belongs to the whole big file. eg: [",
+                        "name": "load",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/files.FinishReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.RespBase"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/files/sessions/start": {
+            "get": {
+                "description": "Start a session to upload a big file(great than 4MB).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "parent path of big file to upload.",
+                        "name": "parent_path",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "name of big file.",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "additional effect of this upload action.",
+                        "name": "upload_type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "number of file blocks.(every block is 4MB size)",
+                        "name": "seqs",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.RespBase"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/files/sessions/upload": {
+            "post": {
+                "description": "Upload a 4MB(or less than) block of the big file in the specified session.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token of the session.",
+                        "name": "session_token",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "index of the block. eg: the first block of the big file has the index 0.",
+                        "name": "seq",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "md5 of this block.",
+                        "name": "hash",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "file content",
+                        "name": "file",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.RespBase"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "files.DeleteReq": {
+            "type": "object",
+            "properties": {
+                "file_list": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "files.DeleteResp": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "msg": {
+                    "type": "string"
+                },
+                "task_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "files.File": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "integer"
+                },
+                "create_time": {
+                    "type": "string"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "is_dir": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parent_path": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "update_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "files.FinishReq": {
+            "type": "object",
+            "properties": {
+                "block_list": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "files.ListResp": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/files.File"
+                    }
+                },
+                "msg": {
+                    "type": "string"
+                }
+            }
+        },
+        "files.StartResp": {
+            "type": "object",
+            "properties": {
+                "block_list": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    },
+                    "example": [
+                        0,
+                        1,
+                        2,
+                        3
+                    ]
+                },
+                "code": {
+                    "type": "integer"
+                },
+                "msg": {
+                    "type": "string"
+                },
+                "session_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.RespBase": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "msg": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
